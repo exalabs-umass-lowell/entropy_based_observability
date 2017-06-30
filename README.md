@@ -1,11 +1,11 @@
 # README #
 
-This file includes the code written through MATLAB
+All the codes are running on MATLAB.
 
 ### What is this repository for? ###
 
-Observability for the chaotic systems through the way of statistical mechancis and entropy
-* Version
+These codes are based on the chaotic system dynamics, and we try to figure out the relationship between observability and entropy variation under different scales
+
 * [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
 ### How do I get set up? ###
