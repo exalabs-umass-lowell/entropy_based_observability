@@ -2,22 +2,20 @@
 
 All the codes are running on MATLAB.
 
-### What is this repository for? ###
+## What is this repository for? ##
+
+#### Chaotic_Systems ####
 
 These codes are based on the chaotic system dynamics, and we try to figure out the relationship between observability and entropy variation under different scales
 
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+#### Entropy_Metric_Determine_Observability ####
 
-### How do I get set up? ###
+This folder contains the code to quantify the observability of statistical-mechancis based traffic through mutual information.
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+#### Neuron Systems ####
+This folder covers simulation examples of neuron systems, single as well as coupled, to understand their behaviors.
 
-### Contribution guidelines ###
+## Contribution guidelines ##
 
 * Writing tests
 * Code review
