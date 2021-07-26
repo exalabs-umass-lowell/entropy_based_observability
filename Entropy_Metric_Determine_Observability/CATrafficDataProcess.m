@@ -46,7 +46,7 @@ classdef CATrafficDataProcess
                 Likelihood_SigmaM_Given_Y   = Probability_Y_Given_SigmaM.*ProbabilityOfLocalConfig/ProbabilityOfFreeFlowFromData + (1 - Probability_Y_Given_SigmaM).*ProbabilityOfLocalConfig/(1-ProbabilityOfFreeFlowFromData);
             end
             % Conduct normalization on likelihood to derive the probability
-            Probability_SigmaM_Given_Y  = Likelihood_SigmaM_Given_Y/sum(Likelihood_SigmaM_Given_Y);
+            Probability_SigmaM_Given_Y  = Likelihood_SigmaM_Given_Y/sum(Likelihood_SigmaM_Given_Y(:));
         end
         
         % ==========================================================
@@ -54,7 +54,7 @@ classdef CATrafficDataProcess
         
         %% This function helps determine the probability of the local states
         
-        function [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix]  = StatePredictionFromConditionalProbability(obj, influentialRange, InteractionCoeff)
+        function [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix]  = StatePredictionFromConditionalProbability(obj, influentialRange, InteractionCoeff, externalFieldCoeff)
             NumOfLocalConfig = 2^influentialRange;
             Probability_Y_Given_SigmaM = zeros(NumOfLocalConfig, 1);
             tempStateMatrix = de2bi(1:NumOfLocalConfig);
@@ -65,7 +65,7 @@ classdef CATrafficDataProcess
             end
             % localStates = (localStates==1).*1;    % convert to 1/0 vector
             for index = 1:NumOfLocalConfig
-                Probability_Y_Given_SigmaM(index) = exp(-interactionCoefficientVector'*localStatesMatrix(index,:)');
+                Probability_Y_Given_SigmaM(index) = min(1, exp(externalFieldCoeff -interactionCoefficientVector'*localStatesMatrix(index,:)'));
             end
         end
         
@@ -79,21 +79,28 @@ classdef CATrafficDataProcess
             influentialRange = size(localStates, 2);
             numOfAgentOutOfRange = numOfAgent - numOfAgentInfluenced;
             sumOfConditionalEntropy = 0;
+            % iterate all possible configuration
             for index = 1:numOfLocalConfig
                 energyLevel = obj.energyLevelCalculation(numOfAgentOutOfRange(index), numOfSite-1-influentialRange);
                 Probability_SigmaComp_Given_SigmaM = energyLevel/sum(energyLevel(:));
                 Probability_SigmaGlobal_Given_Y = Probability_SigmaComp_Given_SigmaM*Probability_SigmaM_Given_Y(index);
-                sumOfConditionalEntropy  = sumOfConditionalEntropy + obj.entropyCalculation(Probability_SigmaGlobal_Given_Y);
+                sumOfConditionalEntropy  = sumOfConditionalEntropy + ProbabilityOfFreeFlowFromData*obj.entropyCalculation(Probability_SigmaGlobal_Given_Y);
             end
+            
+            % Combine distributions within and beyond the influential range
+            % through convolution (this proves to be wrong)
+            energyLevelSigmaStar = obj.energyLevelCalculation(numOfAgentOutOfRange(index), numOfSite-1-influentialRange);
+            ProbabilityOfSigmaStar = energyLevelSigmaStar/sum(energyLevelSigmaStar(:));
+            comboDistribution = conv(Probability_SigmaM_Given_Y, ProbabilityOfSigmaStar);
+            comboConditionalEntropy = obj.entropyCalculation(comboDistribution);
             
             % Calculation of gloabl state entropy
             energyLevel = obj.energyLevelCalculation(numOfAgent, numOfSite);
             probabilityGlobalDistribution = energyLevel/sum(energyLevel(:));
             entropyOfSigmaGlobal = obj.entropyCalculation(probabilityGlobalDistribution);
+            
             % definition of mutual information
-            mutualInformation = entropyOfSigmaGlobal - sumOfConditionalEntropy;
-
-            sum(Probability_SigmaGlobal_Given_Y)
+            mutualInformation = entropyOfSigmaGlobal - ProbabilityOfFreeFlowFromData;
             probabilityMeasurementDistribution = [ProbabilityOfFreeFlowFromData, 1-ProbabilityOfFreeFlowFromData];
             entropyOfMeasurement = obj.entropyCalculation(probabilityMeasurementDistribution);
             observabilityMetric = mutualInformation/max(entropyOfSigmaGlobal, entropyOfMeasurement);

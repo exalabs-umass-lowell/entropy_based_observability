@@ -22,7 +22,7 @@ timeWindowLength = 8;
 %% This function calculates the probability of the local states through Monte Carlo Simulations
 
 CAT = CATrafficDataProcess;
-[Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix] = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff);
+[Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix] = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff, externalFieldCoeff);
 % Calculate the time-space diagram
 [Config, dataOfSpatialTemporal] = CAT.StatisticalMechanicsBasedTraffic(numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange);
 densityOfVehicle = numOfAgent/numOfSite;
@@ -40,7 +40,8 @@ plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(2,:)),numOfSite+1), 'r');
 xlabel("Time (s/site)");
 ylabel("Space (5 m/site)");
 
-historicalMotionData = dataOfSpatialTemporal(1, 2:2+timeWindowLength-1);
+t0 = 1;
+historicalMotionData = dataOfSpatialTemporal(1, t0:t0+timeWindowLength-1);
 ProbabilityOfFreeFlowFromData = CAT.MotionDataFiltering( historicalMotionData', timeWindowLength);
 ProbabilityOfJamsFromData = 1-ProbabilityOfFreeFlowFromData;
 % Probability_Y_Given_SigmaM  = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff);
