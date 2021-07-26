@@ -44,19 +44,22 @@ historicalMotionData = dataOfSpatialTemporal(1, 2:2+timeWindowLength-1);
 ProbabilityOfFreeFlowFromData = CAT.MotionDataFiltering( historicalMotionData', timeWindowLength);
 ProbabilityOfJamsFromData = 1-ProbabilityOfFreeFlowFromData;
 % Probability_Y_Given_SigmaM  = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff);
-ProbabilityOfLocalConfig  = CAT.StatePredictionFromNeighboringSiteStates(influentialRange, Probability_Y_Given_SigmaM);
-Probability_SigmaM_Given_Y  = CAT.DeriveAndNormalizeLikelihoodFromBayesian(Probability_Y_Given_SigmaM, ProbabilityOfLocalConfig, ProbabilityOfFreeFlowFromData);
-mutualInformation  = CAT.globalStateProbability(localStatesMatrix, Probability_SigmaM_Given_Y, numOfSite, numOfAgent);
+ProbabilityOfFreeFlowFromLocalConfig  = CAT.StatePredictionFromNeighboringSiteStates(influentialRange, Probability_Y_Given_SigmaM);
+Probability_SigmaM_Given_Y  = CAT.DeriveAndNormalizeLikelihoodFromBayesian(Probability_Y_Given_SigmaM, ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfFreeFlowFromData);
+[mutualInformation, observabilityMetric]  = CAT. observabilityQuantification(localStatesMatrix, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData);
 
-disp("Probability of the agent in free flow state: ");
-disp(ProbabilityOfFreeFlowFromData);
+%disp("Probability of the agent in free flow state: ");
+%disp(ProbabilityOfFreeFlowFromData);
 
-disp("Probability of measurement given scenario: ");
-disp(Probability_Y_Given_SigmaM);
+%disp("Probability of measurement given scenario: ");
+%disp(Probability_Y_Given_SigmaM);
 
-disp("Probability of scenario given measurements: ");
-disp(Probability_SigmaM_Given_Y);
+%disp("Probability of scenario given measurements: ");
+%disp(Probability_SigmaM_Given_Y);
 
-disp("Final results of Mutual Information is: ");
+disp("Value of Mutual Information is calculated as: ");
 disp(mutualInformation);
+
+disp("Final results of Observability Metric is: ");
+disp(observabilityMetric);
 

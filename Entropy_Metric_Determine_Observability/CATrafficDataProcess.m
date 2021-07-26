@@ -73,17 +73,17 @@ classdef CATrafficDataProcess
         
         %% This function helps determine the probability of the global states
         
-        function mutualInformation = globalStateProbability(obj, localStates, Probability_SigmaM_Given_Y, numOfSite, numOfAgent)
+        function [mutualInformation, observabilityMetric] = observabilityQuantification(obj, localStates, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData)
             numOfAgentInfluenced = sum(localStates, 2);
             numOfLocalConfig = size(localStates, 1);
             influentialRange = size(localStates, 2);
             numOfAgentOutOfRange = numOfAgent - numOfAgentInfluenced;
-            sumOfEntropy = 0;
+            sumOfConditionalEntropy = 0;
             for index = 1:numOfLocalConfig
                 energyLevel = obj.energyLevelCalculation(numOfAgentOutOfRange(index), numOfSite-1-influentialRange);
-                probabilityDistribution = energyLevel/sum(energyLevel(:));
-                Probability_SigmaGlobal_Given_Y = probabilityDistribution*Probability_SigmaM_Given_Y(index);
-                sumOfEntropy  = sumOfEntropy + obj.entropyCalculation(Probability_SigmaGlobal_Given_Y);
+                Probability_SigmaComp_Given_SigmaM = energyLevel/sum(energyLevel(:));
+                Probability_SigmaGlobal_Given_Y = Probability_SigmaComp_Given_SigmaM*Probability_SigmaM_Given_Y(index);
+                sumOfConditionalEntropy  = sumOfConditionalEntropy + obj.entropyCalculation(Probability_SigmaGlobal_Given_Y);
             end
             
             % Calculation of gloabl state entropy
@@ -91,12 +91,16 @@ classdef CATrafficDataProcess
             probabilityGlobalDistribution = energyLevel/sum(energyLevel(:));
             entropyOfSigmaGlobal = obj.entropyCalculation(probabilityGlobalDistribution);
             % definition of mutual information
-            mutualInformation = entropyOfSigmaGlobal - sumOfEntropy;
+            mutualInformation = entropyOfSigmaGlobal - sumOfConditionalEntropy;
+
+            sum(Probability_SigmaGlobal_Given_Y)
+            probabilityMeasurementDistribution = [ProbabilityOfFreeFlowFromData, 1-ProbabilityOfFreeFlowFromData];
+            entropyOfMeasurement = obj.entropyCalculation(probabilityMeasurementDistribution);
+            observabilityMetric = mutualInformation/max(entropyOfSigmaGlobal, entropyOfMeasurement);
         end
           
         % ============================================================
   
-        
         %% This function helps determine the probability of the global states
         
         function  countOfEnergyLevel = energyLevelCalculation(obj, numOfAgent, numOfSite)
