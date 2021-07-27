@@ -36,8 +36,8 @@ ylabel("Space (5 m/site)");
 hold on;
 
 % test of motion data
-plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(2,:)),numOfSite+1), 'r');
-xlabel("Time (s/site)");
+plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(2,:)),numOfSite+1), 'r', 'Linewidth',3);
+xlabel("Time (1 s/step)");
 ylabel("Space (5 m/site)");
 
 t0 = 1;
