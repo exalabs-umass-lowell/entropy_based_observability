@@ -1,7 +1,8 @@
 % Readme:
 
-% This file inclues an example of 8-site traffic system in a ring shape
-% road, and analysis on its mutual information was conducted
+% This file inclues an example of N-site traffic system in a ring shape
+% road, and analysis on its mutual information was conducted to extract 
+% observability metric
 % =========================================================================
 %%  main function
 clc;
