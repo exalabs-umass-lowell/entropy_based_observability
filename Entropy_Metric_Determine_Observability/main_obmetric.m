@@ -25,7 +25,7 @@ timeWindowLength = 8;
 CAT = CATrafficDataProcess;
 [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix] = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff, externalFieldCoeff);
 % Calculate the time-space diagram
-[Config, dataOfSpatialTemporal] = CAT.StatisticalMechanicsBasedTraffic(numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange);
+[Config, dataOfSpatialTemporal, StartPose] = CAT.StatisticalMechanicsBasedTraffic(numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange);
 densityOfVehicle = numOfAgent/numOfSite;
 
 imagesc(Config);
@@ -37,8 +37,9 @@ ylabel("Space (5 m/site)");
 hold on;
 
 % test of motion data
-plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(2,:)),numOfSite+1), 'r', 'Linewidth',3);
-xlabel("Time (1 s/step)");
+AgentIndex = 3;
+plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r');
+xlabel("Time (s/site)");
 ylabel("Space (5 m/site)");
 
 t0 = 1;

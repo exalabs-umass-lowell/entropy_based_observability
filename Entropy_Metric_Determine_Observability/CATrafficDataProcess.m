@@ -9,13 +9,14 @@
 classdef CATrafficDataProcess
     
     methods
-        %% This function determines the probability of measurements
+        %% This function determines the probability at the states of being moving foward during measurements Y
+        
         function ProbabilityOfFreeFlowFromData = MotionDataFiltering(obj, historicalMotionData, timeWindowLength)
             % create a gaussian filter to process the data
             gaussianSequence = gausswin(timeWindowLength*2);
             gaussianKernel = gaussianSequence(1:timeWindowLength)/sum(gaussianSequence)*2;
             ProbabilityOfFreeFlowFromData = gaussianKernel'*historicalMotionData;
-        end     
+        end
         
         % ==========================================================
         
@@ -52,7 +53,8 @@ classdef CATrafficDataProcess
         % ==========================================================
         
         
-        %% This function helps determine the probability of the local states
+        %% This function helps determine the probability of moving forward through the neighboring site states within influential range
+        
         
         function [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix]  = StatePredictionFromConditionalProbability(obj, influentialRange, InteractionCoeff, externalFieldCoeff)
             NumOfLocalConfig = 2^influentialRange;
@@ -105,9 +107,9 @@ classdef CATrafficDataProcess
             entropyOfMeasurement = obj.entropyCalculation(probabilityMeasurementDistribution);
             observabilityMetric = mutualInformation/max(entropyOfSigmaGlobal, entropyOfMeasurement);
         end
-          
+        
         % ============================================================
-  
+        
         %% This function helps determine the probability of the global states
         
         function  countOfEnergyLevel = energyLevelCalculation(obj, numOfAgent, numOfSite)
@@ -118,7 +120,7 @@ classdef CATrafficDataProcess
             %   find spaces between vacant sites and insert set of vehicles  *  group vehicles into (index-1) sets
             for index = 1:numOfLevel
                 if(numOfVacantSite-1 > numOfAgent+1-index)
-                     countOfEnergyLevel(index) = nchoosek(numOfVacantSite-1, numOfAgent+1-index)*nchoosek(numOfAgent-1, index-1);        
+                    countOfEnergyLevel(index) = nchoosek(numOfVacantSite-1, numOfAgent+1-index)*nchoosek(numOfAgent-1, index-1);
                 end
             end
         end
@@ -142,25 +144,26 @@ classdef CATrafficDataProcess
         
         %% This function would determine the dynamics of CA traffic model
         
-        function [Config, motionRecord] = StatisticalMechanicsBasedTraffic(obj, numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange)
+        function [Config, motionRecord, startPose] = StatisticalMechanicsBasedTraffic(obj, numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange)
             
             initConfig = [ones(numOfAgent,1);zeros(numOfSite-numOfAgent,1)];
             initConfig = initConfig(randperm(length(initConfig)));
             initConfig = initConfig*2-ones(numOfSite,1);  % changes states to be +/-1
-
+            
             % Scaling over the sensor range and road length
             Config = -ones(numOfSite, lenOfTime);
             Config(:,1) = initConfig;
             motionRecord = zeros(numOfAgent, lenOfTime);
+            startPose = zeros(numOfAgent, 1);
             localStates = zeros(influentialRange, 1);
             Hash_Pose2Agent = zeros(numOfSite, lenOfTime);
             
             AgentInd = 1;
             for Ind = 1:numOfSite
-               if (initConfig(Ind)== 1)
-                  Hash_Pose2Agent(Ind,1) = AgentInd;
-                  AgentInd = AgentInd+1;
-               end
+                if (initConfig(Ind)== 1)
+                    Hash_Pose2Agent(Ind,1) = AgentInd;
+                    AgentInd = AgentInd+1;
+                end
             end
             
             for t = 1:lenOfTime-1
@@ -174,11 +177,11 @@ classdef CATrafficDataProcess
                     end
                     
                     for iter = ind:ind+influentialRange-1
-                       if(iter > numOfSite)
-                           localStates(iter-ind+1) =  Config(iter-numOfSite+1,t);
-                       else
-                           localStates(iter-ind+1) = Config(iter,t);
-                       end
+                        if(iter > numOfSite)
+                            localStates(iter-ind+1) =  Config(iter-numOfSite+1,t);
+                        else
+                            localStates(iter-ind+1) = Config(iter,t);
+                        end
                     end
                     % Interaction terms
                     localStates = (localStates==1).*1;
@@ -189,14 +192,19 @@ classdef CATrafficDataProcess
                     H = H_int - H_ext;
                     P_tr = min(1, exp(-H));               % probability based on Hamiltonian
                     Rand_Val = rand;             % produce a random number
-       
+                    
+                    if t == 1 && Config(ind, t) == 1
+                        AgentIndex = Hash_Pose2Agent(ind,t);
+                        startPose(AgentIndex,1) = ind;
+                    end
                     % make sure the vehicle are moving forward/backward
                     if Config(ind, t) == 1 && Config(ind2,t)==-1 && Rand_Val <= P_tr
                         Config(ind,t+1) = Config(ind2,t);
                         Config(ind2,t+1) = Config(ind,t);
                         i = i+1;
-                        AgentIndex = Hash_Pose2Agent(ind,t);                        
+                        AgentIndex = Hash_Pose2Agent(ind,t);
                         motionRecord(AgentIndex, t+1) = 1;
+                        
                         Hash_Pose2Agent(ind2,t+1) = AgentIndex;
                     else
                         Config(ind,t+1) = Config(ind,t);
@@ -205,8 +213,8 @@ classdef CATrafficDataProcess
                     i = i+1;
                 end
             end
-        end            
-            
+        end
+        
         % ==========================================================
     end
 end
