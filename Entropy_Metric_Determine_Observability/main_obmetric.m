@@ -47,8 +47,8 @@ historicalMotionData = dataOfSpatialTemporal(1, t0:t0+timeWindowLength-1);
 ProbabilityOfFreeFlowFromData = CAT.MotionDataFiltering( historicalMotionData', timeWindowLength);
 ProbabilityOfJamsFromData = 1-ProbabilityOfFreeFlowFromData;
 % Probability_Y_Given_SigmaM  = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff);
-ProbabilityOfFreeFlowFromLocalConfig  = CAT.StatePredictionFromNeighboringSiteStates(influentialRange, Probability_Y_Given_SigmaM);
-Probability_SigmaM_Given_Y  = CAT.DeriveAndNormalizeLikelihoodFromBayesian(Probability_Y_Given_SigmaM, ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfFreeFlowFromData);
+[ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfLocalConfig]  = CAT.StatePredictionFromNeighboringSiteStates(influentialRange, Probability_Y_Given_SigmaM);
+Probability_SigmaM_Given_Y  = CAT.DeriveAndNormalizeLikelihoodFromBayesian(Probability_Y_Given_SigmaM, ProbabilityOfLocalConfig, ProbabilityOfFreeFlowFromData);
 [mutualInformation, observabilityMetric]  = CAT. observabilityQuantification(localStatesMatrix, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData);
 
 %disp("Probability of the agent in free flow state: ");

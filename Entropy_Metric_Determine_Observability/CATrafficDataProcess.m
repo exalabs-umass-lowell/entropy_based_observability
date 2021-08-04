@@ -22,7 +22,7 @@ classdef CATrafficDataProcess
         
         %% This function helps determine the probability of the local states
         
-        function ProbabilityOfFreeFlowFromLocalConfig  = StatePredictionFromNeighboringSiteStates(obj, influentialRange, Probability_Y_Given_SigmaM)
+        function [ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfLocalConfig]  = StatePredictionFromNeighboringSiteStates(obj, influentialRange, Probability_Y_Given_SigmaM)
             NumOfLocalConfig = 2^influentialRange;
             ProbabilityOfLocalConfig = zeros(NumOfLocalConfig, 1);
             localStatesMatrix = de2bi(1:NumOfLocalConfig);
@@ -48,6 +48,8 @@ classdef CATrafficDataProcess
             end
             % Conduct normalization on likelihood to derive the probability
             Probability_SigmaM_Given_Y  = Likelihood_SigmaM_Given_Y/sum(Likelihood_SigmaM_Given_Y(:));
+            Probability_SigmaM_Given_Y
+            Likelihood_SigmaM_Given_Y
         end
         
         % ==========================================================
@@ -82,29 +84,29 @@ classdef CATrafficDataProcess
             numOfAgentOutOfRange = numOfAgent - numOfAgentInfluenced;
             sumOfConditionalEntropy = 0;
             % iterate all possible configuration
+            % Calculation of conditional entropy   H(\Sigma|Y)
             for index = 1:numOfLocalConfig
+                %  Calculation the energy distributions of sites beyond
+                %  influential range   P(\Sigma_complementary | \Sigma_m)
                 energyLevel = obj.energyLevelCalculation(numOfAgentOutOfRange(index), numOfSite-1-influentialRange);
                 Probability_SigmaComp_Given_SigmaM = energyLevel/sum(energyLevel(:));
+                %  Calculate the probability distributions by merging
+                %  distributions within and beyond influential range
+                %  P(\Sigma_complementary | \Sigma_m)* P(\Sigma_m| Y)
                 Probability_SigmaGlobal_Given_Y = Probability_SigmaComp_Given_SigmaM*Probability_SigmaM_Given_Y(index);
                 sumOfConditionalEntropy  = sumOfConditionalEntropy + ProbabilityOfFreeFlowFromData*obj.entropyCalculation(Probability_SigmaGlobal_Given_Y);
             end
             
-            % Combine distributions within and beyond the influential range
-            % through convolution (this proves to be wrong)
-            energyLevelSigmaStar = obj.energyLevelCalculation(numOfAgentOutOfRange(index), numOfSite-1-influentialRange);
-            ProbabilityOfSigmaStar = energyLevelSigmaStar/sum(energyLevelSigmaStar(:));
-            comboDistribution = conv(Probability_SigmaM_Given_Y, ProbabilityOfSigmaStar);
-            comboConditionalEntropy = obj.entropyCalculation(comboDistribution);
             
-            % Calculation of gloabl state entropy
+            % Calculation of gloabl state entropy   H(\Simga)
             energyLevel = obj.energyLevelCalculation(numOfAgent, numOfSite);
             probabilityGlobalDistribution = energyLevel/sum(energyLevel(:));
-            entropyOfSigmaGlobal = obj.entropyCalculation(probabilityGlobalDistribution);
+            entropyOfSigmaGlobal = obj.entropyCalculation(probabilityGlobalDistribution);  %H(\Sigma)
             
             % definition of mutual information
             mutualInformation = entropyOfSigmaGlobal - ProbabilityOfFreeFlowFromData;
             probabilityMeasurementDistribution = [ProbabilityOfFreeFlowFromData, 1-ProbabilityOfFreeFlowFromData];
-            entropyOfMeasurement = obj.entropyCalculation(probabilityMeasurementDistribution);
+            entropyOfMeasurement = obj.entropyCalculation(probabilityMeasurementDistribution);   %H(Y)
             observabilityMetric = mutualInformation/max(entropyOfSigmaGlobal, entropyOfMeasurement);
         end
         
