@@ -48,8 +48,6 @@ classdef CATrafficDataProcess
             end
             % Conduct normalization on likelihood to derive the probability
             Probability_SigmaM_Given_Y  = Likelihood_SigmaM_Given_Y/sum(Likelihood_SigmaM_Given_Y(:));
-            Probability_SigmaM_Given_Y
-            Likelihood_SigmaM_Given_Y
         end
         
         % ==========================================================

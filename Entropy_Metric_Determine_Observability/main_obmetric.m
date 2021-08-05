@@ -38,8 +38,8 @@ hold on;
 
 % test of motion data
 AgentIndex = 3;
-plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r');
-xlabel("Time (s/site)");
+plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r', 'LineWidth', 3);
+xlabel("Time (s/timestep)");
 ylabel("Space (5 m/site)");
 
 t0 = 1;
