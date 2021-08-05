@@ -1,7 +1,7 @@
 % Readme:
 
 % This file inclues an example of N-site traffic system in a ring shape
-% road, and analysis on its mutual information was conducted to extract 
+% road, and analysis on its mutual information was conducted to extract
 % observability metric
 % =========================================================================
 %%  main function
@@ -28,11 +28,12 @@ CAT = CATrafficDataProcess;
 [Config, dataOfSpatialTemporal, StartPose] = CAT.StatisticalMechanicsBasedTraffic(numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange);
 densityOfVehicle = numOfAgent/numOfSite;
 
+
 imagesc(Config);
 set(gca,'YDir','normal');
 colormap(gray);
 xlabel("Time (s/site)");
-ylabel("Space (5 m/site)"); 
+ylabel("Space (5 m/site)");
 
 hold on;
 
@@ -42,27 +43,48 @@ plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(Agen
 xlabel("Time (s/timestep)");
 ylabel("Space (5 m/site)");
 
+
+
 t0 = 1;
-historicalMotionData = dataOfSpatialTemporal(1, t0:t0+timeWindowLength-1);
-ProbabilityOfFreeFlowFromData = CAT.MotionDataFiltering( historicalMotionData', timeWindowLength);
-ProbabilityOfJamsFromData = 1-ProbabilityOfFreeFlowFromData;
-% Probability_Y_Given_SigmaM  = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff);
-[ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfLocalConfig]  = CAT.StatePredictionFromNeighboringSiteStates(influentialRange, Probability_Y_Given_SigmaM);
-Probability_SigmaM_Given_Y  = CAT.DeriveAndNormalizeLikelihoodFromBayesian(Probability_Y_Given_SigmaM, ProbabilityOfLocalConfig, ProbabilityOfFreeFlowFromData);
-[mutualInformation, observabilityMetric]  = CAT. observabilityQuantification(localStatesMatrix, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData);
+seriesLenth = lenOfTime-timeWindowLength;
+observabilityMetricSeries = zeros(seriesLenth, 1);
+for t = t0:t0+seriesLenth-1
+    historicalMotionData = dataOfSpatialTemporal(AgentIndex, t:t+timeWindowLength-1);
+    ProbabilityOfFreeFlowFromData = CAT.MotionDataFiltering( historicalMotionData', timeWindowLength);
+    ProbabilityOfJamsFromData = 1-ProbabilityOfFreeFlowFromData;
+    % Probability_Y_Given_SigmaM  = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff);
+    [ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfLocalConfig]  = CAT.StatePredictionFromNeighboringSiteStates(influentialRange, Probability_Y_Given_SigmaM);
+    Probability_SigmaM_Given_Y  = CAT.DeriveAndNormalizeLikelihoodFromBayesian(Probability_Y_Given_SigmaM, ProbabilityOfLocalConfig, ProbabilityOfFreeFlowFromData);
+    [mutualInformation, observabilityMetric]  = CAT. observabilityQuantification(localStatesMatrix, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData);
+    observabilityMetricSeries(t-t0+1, 1) = observabilityMetric;
+    
+    %disp("Probability of the agent in free flow state: ");
+    %disp(ProbabilityOfFreeFlowFromData);
+    
+    %disp("Probability of measurement given scenario: ");
+    %disp(Probability_Y_Given_SigmaM);
+    
+    %disp("Probability of scenario given measurements: ");
+    %disp(Probability_SigmaM_Given_Y);
+    
+    %disp("Value of Mutual Information is calculated as: ");
+    %disp(mutualInformation);
+    
+    %disp("Final results of Observability Metric is: ");
+    %disp(observabilityMetric);    
+end
 
-%disp("Probability of the agent in free flow state: ");
-%disp(ProbabilityOfFreeFlowFromData);
 
-%disp("Probability of measurement given scenario: ");
-%disp(Probability_Y_Given_SigmaM);
+figure
+% test of motion data
+AgentIndex = 3;
+yyaxis left
+plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r', 'LineWidth', 3);
+ylabel("Space (5 m/site)");
+yyaxis right
+plot(1:seriesLenth, observabilityMetricSeries, 'b', 'LineWidth', 3);
 
-%disp("Probability of scenario given measurements: ");
-%disp(Probability_SigmaM_Given_Y);
-
-disp("Value of Mutual Information is calculated as: ");
-disp(mutualInformation);
-
-disp("Final results of Observability Metric is: ");
-disp(observabilityMetric);
-
+xlabel("Time (s/timestep)");
+ylabel("Observability Metric");
+ylim([0 1]);
+grid on

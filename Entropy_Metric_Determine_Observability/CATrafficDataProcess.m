@@ -105,7 +105,7 @@ classdef CATrafficDataProcess
             mutualInformation = entropyOfSigmaGlobal - ProbabilityOfFreeFlowFromData;
             probabilityMeasurementDistribution = [ProbabilityOfFreeFlowFromData, 1-ProbabilityOfFreeFlowFromData];
             entropyOfMeasurement = obj.entropyCalculation(probabilityMeasurementDistribution);   %H(Y)
-            observabilityMetric = mutualInformation/max(entropyOfSigmaGlobal, entropyOfMeasurement);
+            observabilityMetric = mutualInformation/entropyOfSigmaGlobal;
         end
         
         % ============================================================
