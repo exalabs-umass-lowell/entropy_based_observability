@@ -78,11 +78,11 @@ end
 figure
 % test of motion data
 AgentIndex = 3;
-yyaxis left
+yyaxis right
 plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r', 'LineWidth', 3);
 ylabel("Space (5 m/site)");
-yyaxis right
-plot(1:seriesLenth, observabilityMetricSeries, 'b', 'LineWidth', 3);
+yyaxis left
+plot(timeWindowLength:seriesLenth+timeWindowLength-1, observabilityMetricSeries, 'b', 'LineWidth', 3);
 
 xlabel("Time (s/timestep)");
 ylabel("Observability Metric");
