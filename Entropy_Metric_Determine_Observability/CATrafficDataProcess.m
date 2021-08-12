@@ -73,8 +73,12 @@ classdef CATrafficDataProcess
 
         
         %% This function helps determine the probability of the global states
+<<<<<<< HEAD
         % localStates:   cover all possible config within influentia
         l
+=======
+        % localStates:   cover all possible config within influential
+>>>>>>> 97d34fcb784e55a8326fcc51b03f715fdfc07c11
         % range        #_config  *  influential_range
         function [mutualInformation, observabilityMetric] = observabilityQuantification(obj, localStates, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData)
             numOfAgentInfluenced = sum(localStates, 2);
@@ -93,7 +97,11 @@ classdef CATrafficDataProcess
                 %  distributions within and beyond influential range
                 %  P(\Sigma_complementary | \Sigma_m)* P(\Sigma_m| Y)
                 Probability_SigmaGlobal_Given_Y = Probability_SigmaComp_Given_SigmaM*Probability_SigmaM_Given_Y(index);
+<<<<<<< HEAD
                 sumOfConditionalEntropy_SigmaGlobal_Given_Y  = sumOfConditionalEntropy_SigmaGlobal_Given_Y + ProbabilityOfFreeFlowFromData*obj.entropyCalculation(Probability_SigmaGlobal_Given_Y)+ ...
+=======
+                sumOfConditionalEntropy  = sumOfConditionalEntropy + ProbabilityOfFreeFlowFromData*obj.entropyCalculation(Probability_SigmaGlobal_Given_Y)+ ...
+>>>>>>> 97d34fcb784e55a8326fcc51b03f715fdfc07c11
                                            (1-ProbabilityOfFreeFlowFromData)*obj.entropyCalculation(1-Probability_SigmaGlobal_Given_Y);
             end
             
