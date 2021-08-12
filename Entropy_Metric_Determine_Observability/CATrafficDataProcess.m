@@ -20,12 +20,30 @@ classdef CATrafficDataProcess
         
         % ==========================================================
         
+        %% This function helps determine the probability of moving forward through the neighboring site states within influential range
+             
+        function [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix]  = StatePredictionFromConditionalProbability(obj, influentialRange, InteractionCoeff, externalFieldCoeff)
+            NumOfLocalConfig = 2^influentialRange;
+            Probability_Y_Given_SigmaM = zeros(NumOfLocalConfig, 1);
+            tempStateMatrix = de2bi(1:NumOfLocalConfig);
+            localStatesMatrix = tempStateMatrix(:, 1:influentialRange);
+            interactionCoefficientVector = zeros(influentialRange, 1);
+            for index = 1:influentialRange
+                interactionCoefficientVector(index) = tanh(InteractionCoeff)^index;
+            end
+            % localStates = (localStates==1).*1;    % convert to 1/0 vector
+            for index = 1:NumOfLocalConfig
+                Probability_Y_Given_SigmaM(index) = min(1, exp(externalFieldCoeff -interactionCoefficientVector'*localStatesMatrix(index,:)'));
+            end
+        end
+        
+        % ==========================================================
+        
         %% This function helps determine the probability of the local states
         
         function [ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfLocalConfig]  = StatePredictionFromNeighboringSiteStates(obj, influentialRange, Probability_Y_Given_SigmaM)
             NumOfLocalConfig = 2^influentialRange;
             ProbabilityOfLocalConfig = zeros(NumOfLocalConfig, 1);
-            localStatesMatrix = de2bi(1:NumOfLocalConfig);
             
             for index = 1:NumOfLocalConfig
                 ProbabilityOfLocalConfig(index) = 1/NumOfLocalConfig;
@@ -49,38 +67,21 @@ classdef CATrafficDataProcess
             % Conduct normalization on likelihood to derive the probability
             Probability_SigmaM_Given_Y  = Likelihood_SigmaM_Given_Y/sum(Likelihood_SigmaM_Given_Y(:));
         end
-        
         % ==========================================================
         
         
-        %% This function helps determine the probability of moving forward through the neighboring site states within influential range
-        
-        
-        function [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix]  = StatePredictionFromConditionalProbability(obj, influentialRange, InteractionCoeff, externalFieldCoeff)
-            NumOfLocalConfig = 2^influentialRange;
-            Probability_Y_Given_SigmaM = zeros(NumOfLocalConfig, 1);
-            tempStateMatrix = de2bi(1:NumOfLocalConfig);
-            localStatesMatrix = tempStateMatrix(:, 1:influentialRange);
-            interactionCoefficientVector = zeros(influentialRange, 1);
-            for index = 1:influentialRange
-                interactionCoefficientVector(index) = tanh(InteractionCoeff)^index;
-            end
-            % localStates = (localStates==1).*1;    % convert to 1/0 vector
-            for index = 1:NumOfLocalConfig
-                Probability_Y_Given_SigmaM(index) = min(1, exp(externalFieldCoeff -interactionCoefficientVector'*localStatesMatrix(index,:)'));
-            end
-        end
-        
-        % ==========================================================
+
         
         %% This function helps determine the probability of the global states
-        
+        % localStates:   cover all possible config within influentia
+        l
+        % range        #_config  *  influential_range
         function [mutualInformation, observabilityMetric] = observabilityQuantification(obj, localStates, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData)
             numOfAgentInfluenced = sum(localStates, 2);
             numOfLocalConfig = size(localStates, 1);
             influentialRange = size(localStates, 2);
             numOfAgentOutOfRange = numOfAgent - numOfAgentInfluenced;
-            sumOfConditionalEntropy = 0;
+            sumOfConditionalEntropy_SigmaGlobal_Given_Y = 0;
             % iterate all possible configuration
             % Calculation of conditional entropy   H(\Sigma|Y)
             for index = 1:numOfLocalConfig
@@ -92,20 +93,29 @@ classdef CATrafficDataProcess
                 %  distributions within and beyond influential range
                 %  P(\Sigma_complementary | \Sigma_m)* P(\Sigma_m| Y)
                 Probability_SigmaGlobal_Given_Y = Probability_SigmaComp_Given_SigmaM*Probability_SigmaM_Given_Y(index);
-                sumOfConditionalEntropy  = sumOfConditionalEntropy + ProbabilityOfFreeFlowFromData*obj.entropyCalculation(Probability_SigmaGlobal_Given_Y);
+                sumOfConditionalEntropy_SigmaGlobal_Given_Y  = sumOfConditionalEntropy_SigmaGlobal_Given_Y + ProbabilityOfFreeFlowFromData*obj.entropyCalculation(Probability_SigmaGlobal_Given_Y)+ ...
+                                           (1-ProbabilityOfFreeFlowFromData)*obj.entropyCalculation(1-Probability_SigmaGlobal_Given_Y);
             end
             
             
+            entropyOfSigmaGlobal = 0;
+            for agentNum = 1:min(numOfAgent, influentialRange)
             % Calculation of gloabl state entropy   H(\Simga)
-            energyLevel = obj.energyLevelCalculation(numOfAgent, numOfSite);
-            probabilityGlobalDistribution = energyLevel/sum(energyLevel(:));
-            entropyOfSigmaGlobal = obj.entropyCalculation(probabilityGlobalDistribution);  %H(\Sigma)
-            
+                numOfAgentOutOfRange = numOfAgent - agentNum;
+                numOfLocalConfig = nchoosek(influentialRange, agentNum);
+                probabilityOfLocalConfig = 1/numOfLocalConfig;
+                energyLevel = obj.energyLevelCalculation(numOfAgentOutOfRange, numOfSite-1-influentialRange);
+                probabilityGlobalDistributionMatrix = energyLevel/sum(energyLevel(:))*probabilityOfLocalConfig*ones(numOfLocalConfig,1)';
+                probabilityGlobalDistributionVec = reshape(probabilityGlobalDistributionMatrix',1,[]);
+                entropyOfSigmaGlobal = entropyOfSigmaGlobal + obj.entropyCalculation(probabilityGlobalDistributionVec);  %H(\Sigma)
+            end
             % definition of mutual information
-            mutualInformation = entropyOfSigmaGlobal - ProbabilityOfFreeFlowFromData;
+
+            mutualInformation = entropyOfSigmaGlobal - sumOfConditionalEntropy_SigmaGlobal_Given_Y;
             probabilityMeasurementDistribution = [ProbabilityOfFreeFlowFromData, 1-ProbabilityOfFreeFlowFromData];
             entropyOfMeasurement = obj.entropyCalculation(probabilityMeasurementDistribution);   %H(Y)
             observabilityMetric = mutualInformation/entropyOfSigmaGlobal;
+            measurementEfficiencyMetric = mutualInformation/entropyOfMeasurement;
         end
         
         % ============================================================
@@ -119,8 +129,11 @@ classdef CATrafficDataProcess
             countOfEnergyLevel = zeros(numOfLevel,1);
             %   find spaces between vacant sites and insert set of vehicles  *  group vehicles into (index-1) sets
             for index = 1:numOfLevel
-                if(numOfVacantSite-1 > numOfAgent+1-index)
+                if(numOfVacantSite-1 >= numOfAgent+1-index)
                     countOfEnergyLevel(index) = nchoosek(numOfVacantSite-1, numOfAgent+1-index)*nchoosek(numOfAgent-1, index-1);
+                else
+                    countOfEnergyLevel(index) = nchoosek(numOfAgent+1-index, numOfVacantSite-1)*nchoosek(numOfVacantSite-1, index-1);
+                    
                 end
             end
         end

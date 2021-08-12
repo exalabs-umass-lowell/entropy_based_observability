@@ -17,7 +17,7 @@ lenOfTime = 64;
 
 % Parameters for information quantification
 influentialRange = 4;
-timeWindowLength = 8;
+timeWindowLength = 16;
 
 
 %% This function calculates the probability of the local states through Monte Carlo Simulations
@@ -44,7 +44,6 @@ xlabel("Time (s/timestep)");
 ylabel("Space (5 m/site)");
 
 
-
 t0 = 1;
 seriesLenth = lenOfTime-timeWindowLength;
 observabilityMetricSeries = zeros(seriesLenth, 1);
@@ -55,7 +54,7 @@ for t = t0:t0+seriesLenth-1
     % Probability_Y_Given_SigmaM  = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff);
     [ProbabilityOfFreeFlowFromLocalConfig, ProbabilityOfLocalConfig]  = CAT.StatePredictionFromNeighboringSiteStates(influentialRange, Probability_Y_Given_SigmaM);
     Probability_SigmaM_Given_Y  = CAT.DeriveAndNormalizeLikelihoodFromBayesian(Probability_Y_Given_SigmaM, ProbabilityOfLocalConfig, ProbabilityOfFreeFlowFromData);
-    [mutualInformation, observabilityMetric]  = CAT. observabilityQuantification(localStatesMatrix, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData);
+    [mutualInformation, observabilityMetric]  = CAT.observabilityQuantification(localStatesMatrix, Probability_SigmaM_Given_Y, numOfSite, numOfAgent, ProbabilityOfFreeFlowFromData);
     observabilityMetricSeries(t-t0+1, 1) = observabilityMetric;
     
     %disp("Probability of the agent in free flow state: ");
@@ -77,14 +76,15 @@ end
 
 figure
 % test of motion data
-AgentIndex = 3;
-yyaxis left
-plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r', 'LineWidth', 3);
-ylabel("Space (5 m/site)");
 yyaxis right
-plot(1:seriesLenth, observabilityMetricSeries, 'b', 'LineWidth', 3);
+plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r', 'LineWidth', 2);
+ylabel("Space (5 m/site)");
+yyaxis left
+plot(timeWindowLength:seriesLenth+timeWindowLength-1, observabilityMetricSeries, 'k', 'LineWidth', 1);
 
 xlabel("Time (s/timestep)");
 ylabel("Observability Metric");
-ylim([0 1]);
+%ylim([0 1]);
 grid on
+
+
