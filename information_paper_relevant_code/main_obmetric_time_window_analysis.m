@@ -23,7 +23,7 @@ AgentIndex = 3;
 
 %% This function calculates the probability of the local states through Monte Carlo Simulations
 
-CAT = CATrafficDataProcess;
+CAT = data_process_util;
 [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix] = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff, externalFieldCoeff);
 % Calculate the time-space diagram
 [Config, dataOfSpatialTemporal, StartPose, p_sequence] = CAT.StatisticalMechanicsBasedTraffic(numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange);

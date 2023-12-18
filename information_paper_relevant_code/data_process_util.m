@@ -6,7 +6,7 @@
 %%  main function
 
 
-classdef CATrafficDataProcess
+classdef data_process_util
     
     methods
         %% This function determines the probability at the states of being moving foward during measurements Y
