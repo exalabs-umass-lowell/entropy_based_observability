@@ -10,13 +10,13 @@ clear;
 
 % Traffic Model prameters
 numOfSite = 80;
-numOfAgent = 55;
+numOfAgent = 64;
 interactionCoeff = 4.0;
 externalFieldCoeff = 1.5;
-lenOfTime = 256;
+lenOfTime = 64;
 
 % Parameters for information quantification
-influentialRange = 4;
+influentialRange = 3;
 timeWindowSet = [8, 12, 16];
 AgentIndex = 3;
 
