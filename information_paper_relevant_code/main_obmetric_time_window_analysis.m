@@ -10,7 +10,7 @@ clear;
 
 % Traffic Model prameters
 numOfSite = 80;
-numOfAgent = 64;
+numOfAgent = 72;
 interactionCoeff = 4.0;
 externalFieldCoeff = 1.5;
 lenOfTime = 64;
@@ -54,9 +54,10 @@ end
 
 figure
 
-subplot(2,1,1);
+subplot(1,2,1);
 imagesc(Config);
 set(gca,'YDir','normal');
+set(gca,'FontSize',14)
 colormap(gray);
 xlabel("Time (s/site)");
 ylabel("Space (5 m/site)");
@@ -69,10 +70,8 @@ plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(Agen
 xlabel("Time (s/timestep)");
 ylabel("Space (5 m/site)");
 
-
-
 % test of motion data
-subplot(2,1,2);
+subplot(1,2,2);
 yyaxis right
 plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r', 'LineWidth', 2);
 ylabel("Space (5 m/site)");

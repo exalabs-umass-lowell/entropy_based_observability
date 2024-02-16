@@ -10,7 +10,7 @@ clear;
 
 % Traffic Model prameters
 numOfSite = 80;
-numOfAgent = 64;
+numOfAgent = 8;
 interactionCoeff = 4.0;
 externalFieldCoeff = 1.5;
 lenOfTime = 64;
@@ -93,7 +93,7 @@ grid on
 
 
 % figure
-% % test of motion data
+% test of motion data
 % yyaxis right
 % plot(1:lenOfTime, rem(cumsum(dataOfSpatialTemporal(AgentIndex,:))+StartPose(AgentIndex),numOfSite+1), 'r', 'LineWidth', 2);
 % ylabel("Space (5 m/site)");

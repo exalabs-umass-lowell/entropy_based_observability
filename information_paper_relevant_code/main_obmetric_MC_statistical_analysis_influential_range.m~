@@ -32,7 +32,7 @@ metric_average_accumulate = 0.0;
 
 numOfAgent = numOfAgentSet(j) 
     
-for i = 1:100
+for i = 1:1000
 [Probability_Y_Given_SigmaM, interactionCoefficientVector, localStatesMatrix] = CAT.StatePredictionFromConditionalProbability(influentialRange, interactionCoeff, externalFieldCoeff);
 % Calculate the time-space diagram
 [Config, dataOfSpatialTemporal, StartPose] = CAT.StatisticalMechanicsBasedTraffic(numOfSite, numOfAgent, interactionCoefficientVector, externalFieldCoeff, lenOfTime, influentialRange);
@@ -61,10 +61,10 @@ for t = t0:t0+seriesLenth-1
     observabilityMetricSeries(t-t0+1, 1) = observabilityMetric;
 end
 
-metric_average_accumulate = metric_average_accumulate + mean(observabilityMetricSeries);
+metric_average_accumulate = max(metric_average_accumulate, max(observabilityMetricSeries));
 end
 % test of motion data
-metric_average_accumulate/100
+metric_average_accumulate
 
 end
 
